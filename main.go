@@ -12,6 +12,32 @@ import (
 	"sync"
 )
 
+func main() {
+	filename := flag.String("file", "urls.json", "Path to files that contains the URLs")
+	poolSize := flag.Int("poolsize", 3, "Number of concurrent downloading threads")
+	filesFormat := flag.String("format", "mp4", "Set the downloadable files format. Note, that all files have to have same MIME type")
+	flag.Parse()
+
+	jsonFile, err := os.Open(*filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	var urls []string
+
+	err = json.Unmarshal(byteValue, &urls)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+
+	httpDownloader := NewVideoDownloader()
+	httpDownloader.SetBufferSize(*poolSize).SetUrls(urls).SetFilesFormat(*filesFormat)
+
+	httpDownloader.Download()
+}
+
 type HttpDownloader struct {
 	queue       []string
 	urls        []string
@@ -99,30 +125,4 @@ func DownloadFile(filepath string, url string) error {
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	return err
-}
-
-func main() {
-	filename := flag.String("file", "urls.json", "Path to files that contains the URLs")
-	poolSize := flag.Int("poolsize", 3, "Number of concurrent downloading threads")
-	filesFormat := flag.String("format", "mp4", "Set the downloadable files format. Note, that all files have to have same MIME type")
-	flag.Parse()
-
-	jsonFile, err := os.Open(*filename)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer jsonFile.Close()
-
-	byteValue, err := ioutil.ReadAll(jsonFile)
-	var urls []string
-
-	err = json.Unmarshal(byteValue, &urls)
-	if err != nil {
-		fmt.Println("err:", err)
-	}
-
-	httpDownloader := NewVideoDownloader()
-	httpDownloader.SetBufferSize(*poolSize).SetUrls(urls).SetFilesFormat(*filesFormat)
-
-	httpDownloader.Download()
 }
