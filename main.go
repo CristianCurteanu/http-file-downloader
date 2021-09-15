@@ -93,6 +93,7 @@ func (vd *HttpDownloader) Download() {
 	vd.cond.L.Unlock()
 }
 
+
 func (vd *HttpDownloader) getFile(url string, id int) {
 	filename := fmt.Sprintf("%d.%s", id, vd.filesFormat)
 	err := DownloadFile(filename, url)
